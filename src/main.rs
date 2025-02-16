@@ -1,20 +1,34 @@
 mod fps_counter;
+mod game;
+mod menu;
 
-use crate::fps_counter::FpsPlugin;
+use crate::{game::GamePlugin, menu::MenuPlugin};
 use bevy::{
-    app::{App, Startup},
-    prelude::{Camera3d, Commands},
+    app::App,
+    prelude::{
+        AppExtStates, Commands, Component, DespawnRecursiveExt, Entity, Query, States, With,
+    },
     DefaultPlugins,
 };
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(FpsPlugin::default())
-        .add_systems(Startup, setup)
+        .add_plugins(MenuPlugin)
+        .add_plugins(GamePlugin)
+        .init_state::<AppState>()
         .run();
 }
 
-fn setup(mut commands: Commands) {
-    commands.spawn(Camera3d::default());
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+enum AppState {
+    #[default]
+    Menu,
+    Game,
+}
+
+pub fn cleanup<T: Component>(query: Query<Entity, With<T>>, mut commands: Commands) {
+    for entity in &query {
+        commands.entity(entity).despawn_recursive();
+    }
 }
