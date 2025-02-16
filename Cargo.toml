@@ -16,3 +16,4 @@ lto = "thin"
 
 [dependencies]
 bevy = { version = "0.15.2", features = ["dynamic_linking"] }
+leafwing-input-manager = "0.16.0"
