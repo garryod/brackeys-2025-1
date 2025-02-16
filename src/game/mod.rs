@@ -25,6 +25,9 @@ impl Plugin for GamePlugin {
 #[derive(Component)]
 struct Game;
 
+#[derive(Component)]
+struct MainCamera;
+
 fn setup(
     mut commands: Commands,
     meshes: ResMut<Assets<Mesh>>,
@@ -32,6 +35,7 @@ fn setup(
 ) {
     commands.spawn((
         Game,
+        MainCamera,
         Camera3d::default(),
         Transform::from_xyz(-10., 5., 10.).looking_at(Vec3::ZERO, Vec3::Z),
     ));

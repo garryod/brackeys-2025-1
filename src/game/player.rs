@@ -1,15 +1,13 @@
+use super::MainCamera;
+use crate::AppState;
 use bevy::{
-    app::{Plugin, Update},
-    asset::Assets,
-    color::Color,
-    math::{Dir2, Vec2},
-    pbr::{MeshMaterial3d, StandardMaterial},
     prelude::{
-        in_state, Bundle, Component, Cuboid, GamepadButton, IntoSystemConfigs, KeyCode, Mesh,
-        Mesh3d, Query, Res, ResMut, Transform, With,
+        in_state, App, Assets, Bundle, Camera, Color, Component, Cuboid, Dir2, GamepadButton,
+        GlobalTransform, InfinitePlane3d, IntoSystemConfigs, KeyCode, Mesh, Mesh3d, MeshMaterial3d,
+        Plugin, Quat, Query, Reflect, Res, ResMut, Resource, StandardMaterial, Time, Transform,
+        Update, Vec2, Vec3, Vec3Swizzles, Window, With,
     },
-    reflect::Reflect,
-    time::Time,
+    window::PrimaryWindow,
 };
 use leafwing_input_manager::{
     plugin::InputManagerPlugin,
@@ -17,14 +15,16 @@ use leafwing_input_manager::{
     Actionlike,
 };
 
-use crate::AppState;
-
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
-    fn build(&self, app: &mut bevy::prelude::App) {
+    fn build(&self, app: &mut App) {
         app.add_plugins(InputManagerPlugin::<Action>::default())
-            .add_systems(Update, move_player.run_if(in_state(AppState::Game)));
+            .init_resource::<CursorCoordinates>()
+            .add_systems(
+                Update,
+                (project_cursor, move_player).run_if(in_state(AppState::Game)),
+            );
     }
 }
 
@@ -97,8 +97,35 @@ impl Action {
     }
 }
 
+#[derive(Resource, Default)]
+struct CursorCoordinates(Vec2);
+
+fn project_cursor(
+    mut cursor_coordinates: ResMut<CursorCoordinates>,
+    window: Query<&Window, With<PrimaryWindow>>,
+    camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+) {
+    let (camera, camera_transform) = camera.single();
+    let window = window.single();
+
+    let Some(cursor_position) = window.cursor_position() else {
+        return;
+    };
+
+    let Ok(ray) = camera.viewport_to_world(camera_transform, cursor_position) else {
+        return;
+    };
+
+    let Some(distance) = ray.intersect_plane(Vec3::ZERO, InfinitePlane3d::new(Vec3::Z)) else {
+        return;
+    };
+    let global_cursor = ray.get_point(distance);
+    cursor_coordinates.0 = global_cursor.xy();
+}
+
 fn move_player(
     mut query: Query<(&mut Transform, &ActionState<Action>), With<Player>>,
+    cursor_coordinates: Res<CursorCoordinates>,
     time: Res<Time>,
 ) {
     for (mut transform, action) in query.iter_mut() {
@@ -113,5 +140,7 @@ fn move_player(
         movement = movement.normalize_or_zero() * time.delta_secs();
         transform.translation.x += movement.x;
         transform.translation.y += movement.y;
+        transform.rotation =
+            Quat::from_rotation_z((transform.translation.xy() - cursor_coordinates.0).to_angle());
     }
 }
