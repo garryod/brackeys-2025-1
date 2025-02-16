@@ -1,13 +1,12 @@
-use crate::{cleanup, fps_counter::FpsPlugin, AppState};
 use bevy::{
     app::{Plugin, Update},
     asset::Assets,
     color::Color,
-    math::{Dir2, Vec2, Vec3},
-    pbr::{AmbientLight, MeshMaterial3d, StandardMaterial},
+    math::{Dir2, Vec2},
+    pbr::{MeshMaterial3d, StandardMaterial},
     prelude::{
-        default, in_state, Camera3d, Commands, Component, Cuboid, GamepadButton, IntoSystemConfigs,
-        KeyCode, Mesh, Mesh3d, OnEnter, OnExit, Query, Res, ResMut, Transform, With,
+        in_state, Bundle, Component, Cuboid, GamepadButton, IntoSystemConfigs, KeyCode, Mesh,
+        Mesh3d, Query, Res, ResMut, Transform, With,
     },
     reflect::Reflect,
     time::Time,
@@ -18,20 +17,40 @@ use leafwing_input_manager::{
     Actionlike,
 };
 
-pub struct GamePlugin;
+use crate::AppState;
 
-impl Plugin for GamePlugin {
+pub struct PlayerPlugin;
+
+impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_plugins(FpsPlugin::default())
-            .add_plugins(InputManagerPlugin::<Action>::default())
-            .add_systems(OnEnter(AppState::Game), setup)
-            .add_systems(OnExit(AppState::Game), cleanup::<Game>)
+        app.add_plugins(InputManagerPlugin::<Action>::default())
             .add_systems(Update, move_player.run_if(in_state(AppState::Game)));
     }
 }
 
-#[derive(Component)]
-struct Game;
+#[derive(Bundle)]
+pub struct PlayerBundle {
+    player: Player,
+    action_state: ActionState<Action>,
+    input_map: InputMap<Action>,
+    mesh: Mesh3d,
+    material: MeshMaterial3d<StandardMaterial>,
+}
+
+impl PlayerBundle {
+    pub fn new(
+        mut meshes: ResMut<Assets<Mesh>>,
+        mut materials: ResMut<Assets<StandardMaterial>>,
+    ) -> Self {
+        Self {
+            player: Player,
+            action_state: ActionState::<Action>::default(),
+            input_map: Action::default_input_map(),
+            mesh: Mesh3d(meshes.add(Cuboid::new(0.5, 0.5, 2.))),
+            material: MeshMaterial3d(materials.add(Color::hsl(220., 0.1, 0.5))),
+        }
+    }
+}
 
 #[derive(Component)]
 struct Player;
@@ -76,28 +95,6 @@ impl Action {
 
         input_map
     }
-}
-
-fn setup(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    commands.spawn((
-        Game,
-        Camera3d::default(),
-        Transform::from_xyz(-10., 5., 10.).looking_at(Vec3::ZERO, Vec3::Z),
-    ));
-    commands.spawn((
-        Game,
-        Player,
-        ActionState::<Action>::default(),
-        Action::default_input_map(),
-        Mesh3d(meshes.add(Cuboid::new(0.5, 0.5, 2.))),
-        MeshMaterial3d(materials.add(Color::hsl(220., 0.1, 0.5))),
-        Transform::from_xyz(0., 1., 0.),
-    ));
-    commands.insert_resource(AmbientLight { ..default() });
 }
 
 fn move_player(
