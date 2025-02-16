@@ -30,3 +30,8 @@ jobs:
           --no-deps
           --
           --deny warnings
+
+      - name: Check Dependencies with Cargo Deny
+        uses: EmbarkStudios/cargo-deny-action@v2.0.4
+        with:
+          command: check licenses
