@@ -35,12 +35,14 @@ pub struct PlayerBundle {
     input_map: InputMap<Action>,
     mesh: Mesh3d,
     material: MeshMaterial3d<StandardMaterial>,
+    transform: Transform,
 }
 
 impl PlayerBundle {
     pub fn new(
-        mut meshes: ResMut<Assets<Mesh>>,
-        mut materials: ResMut<Assets<StandardMaterial>>,
+        meshes: &mut ResMut<Assets<Mesh>>,
+        materials: &mut ResMut<Assets<StandardMaterial>>,
+        position: Vec3,
     ) -> Self {
         Self {
             player: Player,
@@ -48,12 +50,13 @@ impl PlayerBundle {
             input_map: Action::default_input_map(),
             mesh: Mesh3d(meshes.add(Cuboid::new(0.5, 0.5, 2.))),
             material: MeshMaterial3d(materials.add(Color::hsl(220., 0.1, 0.5))),
+            transform: Transform::from_translation(position),
         }
     }
 }
 
 #[derive(Component)]
-struct Player;
+pub struct Player;
 
 #[derive(Debug, Actionlike, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
 enum Action {

@@ -41,8 +41,7 @@ fn setup(
     ));
     commands.spawn((
         Game,
-        PlayerBundle::new(meshes, materials),
-        Transform::from_xyz(0., 1., 0.),
+        PlayerBundle::new(&mut meshes, &mut materials, Vec3::new(0., 1., 0.)),
     ));
     commands.insert_resource(AmbientLight { ..default() });
 }
