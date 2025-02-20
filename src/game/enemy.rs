@@ -15,6 +15,8 @@ impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(Sprite3dPlugin)
             .insert_resource(AlertSprite::default())
+            .insert_resource(EnemyMesh::default())
+            .insert_resource(EnemyMaterial::default())
             .add_systems(Startup, load)
             .add_systems(
                 Update,
@@ -34,14 +36,14 @@ pub struct EnemyBundle {
 
 impl EnemyBundle {
     pub fn new(
-        meshes: &mut ResMut<Assets<Mesh>>,
-        materials: &mut ResMut<Assets<StandardMaterial>>,
+        enemy_mesh: Res<EnemyMesh>,
+        enemy_material: Res<EnemyMaterial>,
         position: Vec3,
     ) -> Self {
         Self {
             enemy: Enemy,
-            mesh: Mesh3d(meshes.add(Capsule3d::new(0.25, 2.))),
-            material: MeshMaterial3d(materials.add(Color::hsl(0., 0.6, 0.5))),
+            mesh: Mesh3d(enemy_mesh.0.clone()),
+            material: MeshMaterial3d(enemy_material.0.clone()),
             transform: Transform::from_translation(position)
                 .with_rotation(Quat::from_rotation_x(std::f32::consts::FRAC_PI_2)),
         }
@@ -58,10 +60,25 @@ struct Alerted;
 struct AlertIcon;
 
 #[derive(Resource, Default)]
+pub struct EnemyMesh(Handle<Mesh>);
+
+#[derive(Resource, Default)]
+pub struct EnemyMaterial(Handle<StandardMaterial>);
+
+#[derive(Resource, Default)]
 struct AlertSprite(Handle<Image>);
 
-fn load(asset_server: Res<AssetServer>, mut assets: ResMut<AlertSprite>) {
-    assets.0 = asset_server.load("sprites/enemy/alert.png")
+fn load(
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    asset_server: Res<AssetServer>,
+    mut enemy_mesh: ResMut<EnemyMesh>,
+    mut enemy_material: ResMut<EnemyMaterial>,
+    mut alert_sprite: ResMut<AlertSprite>,
+) {
+    enemy_mesh.0 = meshes.add(Capsule3d::new(0.25, 2.));
+    enemy_material.0 = materials.add(Color::hsl(0., 0.6, 0.5));
+    alert_sprite.0 = asset_server.load("sprites/enemy/alert.png")
 }
 
 fn add_alert_icon(

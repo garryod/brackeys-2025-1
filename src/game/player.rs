@@ -3,9 +3,9 @@ use crate::AppState;
 use bevy::{
     prelude::{
         in_state, App, Assets, Bundle, Camera, Color, Component, Cuboid, Dir2, GamepadButton,
-        GlobalTransform, InfinitePlane3d, IntoSystemConfigs, KeyCode, Mesh, Mesh3d, MeshMaterial3d,
-        Plugin, Quat, Query, Reflect, Res, ResMut, Resource, StandardMaterial, Time, Transform,
-        Update, Vec2, Vec3, Vec3Swizzles, Window, With,
+        GlobalTransform, Handle, InfinitePlane3d, IntoSystemConfigs, KeyCode, Mesh, Mesh3d,
+        MeshMaterial3d, Plugin, Quat, Query, Reflect, Res, ResMut, Resource, StandardMaterial,
+        Startup, Time, Transform, Update, Vec2, Vec3, Vec3Swizzles, Window, With,
     },
     window::PrimaryWindow,
 };
@@ -21,6 +21,9 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(InputManagerPlugin::<Action>::default())
             .init_resource::<CursorCoordinates>()
+            .insert_resource(PlayerMesh::default())
+            .insert_resource(PlayerMaterial::default())
+            .add_systems(Startup, load)
             .add_systems(
                 Update,
                 (project_cursor, move_player).run_if(in_state(AppState::Game)),
@@ -40,16 +43,16 @@ pub struct PlayerBundle {
 
 impl PlayerBundle {
     pub fn new(
-        meshes: &mut ResMut<Assets<Mesh>>,
-        materials: &mut ResMut<Assets<StandardMaterial>>,
+        player_mesh: Res<PlayerMesh>,
+        player_material: Res<PlayerMaterial>,
         position: Vec3,
     ) -> Self {
         Self {
             player: Player,
             action_state: ActionState::<Action>::default(),
             input_map: Action::default_input_map(),
-            mesh: Mesh3d(meshes.add(Cuboid::new(0.5, 0.5, 2.))),
-            material: MeshMaterial3d(materials.add(Color::hsl(220., 0.1, 0.5))),
+            mesh: Mesh3d(player_mesh.0.clone()),
+            material: MeshMaterial3d(player_material.0.clone()),
             transform: Transform::from_translation(position),
         }
     }
@@ -57,6 +60,22 @@ impl PlayerBundle {
 
 #[derive(Component)]
 pub struct Player;
+
+#[derive(Resource, Default)]
+pub struct PlayerMesh(Handle<Mesh>);
+
+#[derive(Resource, Default)]
+pub struct PlayerMaterial(Handle<StandardMaterial>);
+
+fn load(
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut player_mesh: ResMut<PlayerMesh>,
+    mut player_material: ResMut<PlayerMaterial>,
+) {
+    player_mesh.0 = meshes.add(Cuboid::new(0.5, 0.5, 2.));
+    player_material.0 = materials.add(Color::hsl(220., 0.1, 0.5));
+}
 
 #[derive(Debug, Actionlike, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
 enum Action {

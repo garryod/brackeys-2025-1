@@ -2,16 +2,15 @@ mod enemy;
 mod player;
 
 use self::{
-    enemy::{EnemyBundle, EnemyPlugin},
-    player::{PlayerBundle, PlayerPlugin},
+    enemy::{EnemyBundle, EnemyMaterial, EnemyMesh, EnemyPlugin},
+    player::{PlayerBundle, PlayerMaterial, PlayerMesh, PlayerPlugin},
 };
 use crate::{cleanup, fps_counter::FpsPlugin, AppState};
 use bevy::{
     app::Plugin,
-    asset::Assets,
     math::Vec3,
-    pbr::{AmbientLight, StandardMaterial},
-    prelude::{default, Camera3d, Commands, Component, Mesh, OnEnter, OnExit, ResMut, Transform},
+    pbr::AmbientLight,
+    prelude::{default, Camera3d, Commands, Component, OnEnter, OnExit, Res, Transform},
 };
 
 pub struct GamePlugin;
@@ -34,8 +33,10 @@ struct MainCamera;
 
 fn setup(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    player_mesh: Res<PlayerMesh>,
+    player_material: Res<PlayerMaterial>,
+    enemy_mesh: Res<EnemyMesh>,
+    enemy_material: Res<EnemyMaterial>,
 ) {
     commands.spawn((
         Game,
@@ -45,11 +46,11 @@ fn setup(
     ));
     commands.spawn((
         Game,
-        PlayerBundle::new(&mut meshes, &mut materials, Vec3::new(0., 0., 0.)),
+        PlayerBundle::new(player_mesh, player_material, Vec3::new(0., 0., 0.)),
     ));
     commands.insert_resource(AmbientLight { ..default() });
     commands.spawn((
         Game,
-        EnemyBundle::new(&mut meshes, &mut materials, Vec3::new(2., 2., 0.)),
+        EnemyBundle::new(enemy_mesh, enemy_material, Vec3::new(2., 2., 0.)),
     ));
 }
