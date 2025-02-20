@@ -54,11 +54,11 @@ fn setup(
     ));
     commands.spawn((
         Game,
-        PlayerBundle::new(player_mesh, player_material, Vec3::new(0., 0., 0.)),
+        PlayerBundle::new(player_mesh, player_material, Vec2::new(0., 0.)),
     ));
     commands.insert_resource(AmbientLight { ..default() });
     commands.spawn((
         Game,
-        EnemyBundle::new(enemy_mesh, enemy_material, Vec3::new(2., 2., 0.)),
+        EnemyBundle::new(enemy_mesh, enemy_material, Vec2::new(2., 2.)),
     ));
 }

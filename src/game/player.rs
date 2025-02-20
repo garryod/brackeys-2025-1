@@ -45,7 +45,7 @@ impl PlayerBundle {
     pub fn new(
         player_mesh: Res<PlayerMesh>,
         player_material: Res<PlayerMaterial>,
-        position: Vec3,
+        position: Vec2,
     ) -> Self {
         Self {
             player: Player,
@@ -53,7 +53,7 @@ impl PlayerBundle {
             input_map: Action::default_input_map(),
             mesh: Mesh3d(player_mesh.0.clone()),
             material: MeshMaterial3d(player_material.0.clone()),
-            transform: Transform::from_translation(position),
+            transform: Transform::from_xyz(position.x, position.y, 0.),
         }
     }
 }

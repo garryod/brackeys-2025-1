@@ -4,7 +4,7 @@ use bevy::prelude::{
     default, in_state, Added, App, AssetServer, Assets, BuildChildren, Bundle, Camera, Capsule3d,
     ChildBuild, Color, Commands, Component, Entity, GlobalTransform, Handle, Image,
     IntoSystemConfigs, Mesh, Mesh3d, MeshMaterial3d, Parent, Plugin, Quat, Query,
-    RemovedComponents, Res, ResMut, Resource, StandardMaterial, Startup, Transform, Update, Vec3,
+    RemovedComponents, Res, ResMut, Resource, StandardMaterial, Startup, Transform, Update, Vec2,
     Vec3Swizzles, With,
 };
 use bevy_sprite3d::{Sprite3dBuilder, Sprite3dParams, Sprite3dPlugin};
@@ -38,13 +38,13 @@ impl EnemyBundle {
     pub fn new(
         enemy_mesh: Res<EnemyMesh>,
         enemy_material: Res<EnemyMaterial>,
-        position: Vec3,
+        position: Vec2,
     ) -> Self {
         Self {
             enemy: Enemy,
             mesh: Mesh3d(enemy_mesh.0.clone()),
             material: MeshMaterial3d(enemy_material.0.clone()),
-            transform: Transform::from_translation(position)
+            transform: Transform::from_xyz(position.x, position.y, 0.)
                 .with_rotation(Quat::from_rotation_x(std::f32::consts::FRAC_PI_2)),
         }
     }
